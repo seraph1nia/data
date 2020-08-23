@@ -1,38 +1,74 @@
 - hosts: localhost
   become: true
   connection: local
+  gather_facts: no
   tasks:
-
-    - terraform:
+    - name: apply terraform for buckets, buckets configured cannot be deleted via terraform
+      terraform:
         project_path: '../../terraform/buckets'
         state: present
+      when: not delete_cluster | bool
 
-    - terraform:
+    - name: apply terraform for vpc etc
+      terraform:
         project_path: '../../terraform/therest'
         state: present
+      when: not delete_cluster | bool
 
-    - name: make sure jq is installed
-      package:
-        name: jq
-        state: latest
+    - name: register bucketname
+      shell: cd ../../terraform/therest && terraform output kops_bucket
+      register: kops_bucket
+      when: not delete_cluster | bool
 
-    - name: kops create config
-      command: |
-                cd ../../terraform/therest && \
-                export KOPS_STATE_STORE=s3://$(terraform output kops_bucket) && \
+    - name: add kops to environment
+      lineinfile:
+        path: ~/.bashrc
+        line: export KOPS_STATE_STORE=s3://{{ kops_bucket.stdout }}
+        regexp: ^export KOPS_STATE_STORE
+      register: environment
+      when: not delete_cluster | bool
+    
+    - name: apply environment
+      command: source ~/.bashrc
+      when: environment.changed|bool
+      when: not delete_cluster | bool
+
+    - name: kops create config,
+      shell: |
+                cd ../../terraform/therest
                 kops create cluster \
                 --vpc=$(terraform output vpc_id) \
                 --networking=calico \
                 --master-zones=$(terraform output subnet0az) \
                 --subnets=$(terraform output subnet0),$(terraform output subnet1),$(terraform output subnet2) \
                 --zones=$(terraform output subnet0az),$(terraform output subnet1az),$(terraform output subnet2az) \
-                --node-count=2 \
-                --master-size=t2.micro \
+                --node-count=3 \
+                --master-size=t2.medium \
                 --node-size=t2.micro \
                 --dns private \
-                --name=k8s-clusters.$(terraform output route53_name) && \
+                --name=k8s-clusters.$(terraform output route53_name)
                 kops update cluster --name k8s-clusters.$(terraform output route53_name) --yes
-    
+      register: check_kops 
+      when: not delete_cluster | bool
+      changed_when:
+        - 'not "already exists" in check_kops.stderr'
+        - check_kops.rc == 0
 
-     
- 
+
+    - name: kops delete cluster
+      shell: |
+              cd ../../terraform/therest
+              kops delete cluster --yes --name=k8s-clusters.$(terraform output route53_name)
+      when: delete_cluster | bool
+      register: check_del_cluster
+      failed_when:
+        - "not 'not found' in check_del_cluster.stderr"
+        - check_del_cluster.rc == 1
+      changed_when: 
+        - check_del_cluster.rc == 0
+        
+    - name: delete terraform for vpc etc
+      terraform:
+        project_path: '../../terraform/therest'
+        state: present
+      when:  delete_cluster | bool
