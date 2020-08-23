@@ -16,7 +16,7 @@ aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 region=us-west-2
 output=json
 ```
-### first step
+### first step, install ansible
 ```
 <projectfolder>/scripts/first_setup.sh
 ```
