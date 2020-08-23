@@ -1,0 +1,48 @@
+---
+# tasks file for first-run
+
+- name: make sure yum-utils is installed
+  package:
+    name: yum-utils
+    state: latest
+
+- name: Add hashicorp repository
+  command: yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+
+- name: make sure terraform is installed
+  package:
+    name: terraform
+    state: latest
+
+- name: install autocomplete
+  command: terraform -install-autocomplete
+  register: check_terra
+  failed_when:
+    - "not 'already installed' in check_terra.stderr"
+    - check_terra.rc == 1
+  changed_when: 
+    - "not 'already installed' in check_terra.stderr"
+
+- name: make sure unzip is installed
+  package:
+    name: unzip
+    state: latest
+
+- name: download aws cli package
+  unarchive:
+    src: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+    dest: "/root"
+    remote_src: yes     
+    
+- name: install aws-cli
+  command: /root/aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli
+  register: check_aws
+  failed_when:
+    - "not 'Found preexisting AWS CLI installation' in check_aws.stderr"
+    - check_aws.rc == 1
+  changed_when:
+    - "not 'Found preexisting AWS CLI installation' in check_aws.stderr"
+
+- include: kubectl.yml
+
+- include: kops.yml

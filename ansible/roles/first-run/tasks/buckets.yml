@@ -1,0 +1,14 @@
+- name: make sure pip is installed
+  package:
+    name: python-pip
+    state: latest
+
+- pip:
+    name: boto3
+
+
+- name: create bucket for terraform backend
+  s3_bucket:
+    name: "{{ s3_backend_name1 }}"
+    versioning: yes
+    state: present

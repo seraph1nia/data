@@ -1,0 +1,65 @@
+resource "aws_instance" "node0" {
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = "t2.micro"
+  security_groups = [aws_security_group.allow_all.id]
+  subnet_id = aws_subnet.main0.id
+  associate_public_ip_address = true
+
+  key_name = aws_key_pair.generated_key.key_name
+
+  connection {
+  host = aws_instance.node0.public_ip
+  user = "ec2-user"
+  private_key = tls_private_key.example.private_key_pem
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo yum update -y",
+    ]
+  }
+}
+
+resource "aws_instance" "node1" {
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = "t2.micro"
+  security_groups = [aws_security_group.allow_all.id]
+  subnet_id = aws_subnet.main1.id
+  associate_public_ip_address = true
+
+  key_name = aws_key_pair.generated_key.key_name
+
+  connection {
+  host = aws_instance.node1.public_ip
+  user = "ec2-user"
+  private_key = tls_private_key.example.private_key_pem
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo yum update -y",
+    ]
+  }
+}
+
+resource "aws_instance" "node2" {
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = "t2.micro"
+  security_groups = [aws_security_group.allow_all.id]
+  subnet_id = aws_subnet.main2.id
+  associate_public_ip_address = true
+
+  key_name = aws_key_pair.generated_key.key_name
+
+  connection {
+  host = aws_instance.node2.public_ip
+  user = "ec2-user"
+  private_key = tls_private_key.example.private_key_pem
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo yum update -y",
+    ]
+  }
+}

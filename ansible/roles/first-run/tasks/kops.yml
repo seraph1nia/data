@@ -1,0 +1,15 @@
+- name: install wget
+  package:
+    name: wget
+    state: latest
+
+- name: check latest version kops
+  shell: curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4  
+  register: version_kops
+
+
+- name: Download kops
+  get_url:
+    url: https://github.com/kubernetes/kops/releases/download/{{ version_kops.stdout }}/kops-linux-amd64
+    dest: /usr/local/bin/kops
+    mode: '0750'

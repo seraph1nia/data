@@ -1,0 +1,6 @@
+- s3_bucket:
+    name: "{{ s3_backend_name1 }}"
+    versioning: yes
+    state: present
+
+    

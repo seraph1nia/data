@@ -1,0 +1,5 @@
+---
+# tasks file for terra-backend
+
+- include: python.yml
+- include: buckets.yml

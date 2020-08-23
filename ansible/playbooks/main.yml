@@ -1,0 +1,38 @@
+- hosts: localhost
+  become: true
+  connection: local
+  tasks:
+
+    - terraform:
+        project_path: '../../terraform/buckets'
+        state: present
+
+    - terraform:
+        project_path: '../../terraform/therest'
+        state: present
+
+    - name: make sure jq is installed
+      package:
+        name: jq
+        state: latest
+
+    - name: kops create config
+      command: |
+                cd ../../terraform/therest && \
+                export KOPS_STATE_STORE=s3://$(terraform output kops_bucket) && \
+                kops create cluster \
+                --vpc=$(terraform output vpc_id) \
+                --networking=calico \
+                --master-zones=$(terraform output subnet0az) \
+                --subnets=$(terraform output subnet0),$(terraform output subnet1),$(terraform output subnet2) \
+                --zones=$(terraform output subnet0az),$(terraform output subnet1az),$(terraform output subnet2az) \
+                --node-count=2 \
+                --master-size=t2.micro \
+                --node-size=t2.micro \
+                --dns private \
+                --name=k8s-clusters.$(terraform output route53_name) && \
+                kops update cluster --name k8s-clusters.$(terraform output route53_name) --yes
+    
+
+     
+ 
