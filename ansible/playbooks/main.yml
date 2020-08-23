@@ -55,6 +55,21 @@
         - 'not "already exists" in check_kops.stderr'
         - check_kops.rc == 0
 
+    - name: sleep for 300 seconds and continue with play
+      wait_for:
+        timeout: 30
+      when: not delete_cluster | bool
+
+    - name: check instance public ip, need to do this in terraform, not dynamic!
+      shell: aws ec2 describe-instances --filters "Name=tag:Name,Values=master-us-east-2a.masters.k8s-clusters.data.lan" --query "Reservations[].Instances[].PublicIpAddress[]" | tr -d "-" | tr -d " "
+      register: pub_ip_master
+
+    - name: edit host file
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ pub_ip_master.stdout }}   api.k8s-clusters.data.lan"
+        regexp: "api.k8s-clusters.data.lan"
+      when: not delete_cluster | bool
 
     - name: kops delete cluster
       shell: |

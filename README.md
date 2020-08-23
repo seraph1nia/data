@@ -57,5 +57,15 @@ cd <projectfolder>/ansible
 ansible-playbook playbooks/main.yml
 ```
 
+### destroy cluster and vpc
 
+cd <projectfolder>/ansible
+ansible-playbook playbooks/main.yml -v --extra-vars="delete_cluster=True"
+
+
+### link voor sparkdingen
+
+https://github.com/GoogleCloudPlatform/spark-on-k8s-operator/blob/master/docs/quick-start-guide.md
+
+je moet nog helm installatie in de code doen
 
