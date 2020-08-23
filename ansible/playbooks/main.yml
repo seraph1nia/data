@@ -25,13 +25,14 @@
         path: ~/.bashrc
         line: export KOPS_STATE_STORE=s3://{{ kops_bucket.stdout }}
         regexp: ^export KOPS_STATE_STORE
-      register: environment
+      register: environment_check
       when: not delete_cluster | bool
-    
+
     - name: apply environment
-      command: source ~/.bashrc
-      when: environment.changed|bool
-      when: not delete_cluster | bool
+      shell: source ~/.bashrc
+      when: 
+        - environment_check.changed == "true"
+        - not delete_cluster | bool
 
     - name: kops create config,
       shell: |
