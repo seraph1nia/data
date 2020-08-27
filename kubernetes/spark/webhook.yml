@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+---
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -20,7 +21,7 @@ metadata:
   name: spark-operator
 spec: {}
 status: {}
-
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -86,32 +87,17 @@ spec:
         imagePullPolicy: IfNotPresent
         command: ["/usr/bin/gencerts.sh", "-p"]
 ---
-kind: Service
-apiVersion: v1
-metadata:
-  name: spark-webhook
-  namespace: spark-operator
-spec:
-  ports:
-    - port: 443
-      targetPort: 8080
-      name: webhook
-  selector:
-    app.kubernetes.io/name: sparkoperator
-    app.kubernetes.io/version: v1beta2-1.2.0-3.0.0
+#kind: Service
+#apiVersion: v1
+#metadata:
+#  name: spark-webhook
+#  namespace: spark-operator
+#spec:
+#  ports:
+#    - port: 8080
+#      targetPort: 8080
+#      name: webhook
+#  selector:
+#    app.kubernetes.io/name: sparkoperator
+#    app.kubernetes.io/version: v1beta2-1.2.0-3.0.0
 
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: spark-webhook
-  namespace: spark-operator
-spec:
-  rules:
-  - host: traefik-ui.minikube
-    http:
-      paths:
-      - path: /spark
-        backend:
-          serviceName: spark-webhook
-          servicePort: webhook

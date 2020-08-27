@@ -69,3 +69,4 @@ https://github.com/GoogleCloudPlatform/spark-on-k8s-operator/blob/master/docs/qu
 
 je moet nog helm installatie in de code doen
 
+

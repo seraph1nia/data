@@ -3,19 +3,13 @@ resource "aws_s3_bucket" "raw_bucket" {
   acl    = "private"
 
   tags = {
-    Name        = "Raw data"
+    Name        = "terraform backends"
     Environment = "Dev"
   }
   lifecycle {
     prevent_destroy = true 
   }
-  lifecycle_rule {
-    enabled = true
-    transition {
-      days          = 2
-      storage_class = "GLACIER"
-    }
-  }
+
 }
 
 resource "aws_s3_bucket" "kops_bucket" {

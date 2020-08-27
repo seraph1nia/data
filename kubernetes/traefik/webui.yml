@@ -18,10 +18,10 @@ metadata:
   namespace: kube-system
 spec:
   rules:
-  - host: traefik-ui.minikube
+  - host: traefiktest.lan
     http:
       paths:
-      - path: /
+      - path: /status
         backend:
           serviceName: traefik-web-ui
           servicePort: web

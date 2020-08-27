@@ -15,3 +15,24 @@
     name: kubectl
     state: latest
 
+- name: install helm yolo style
+  shell: curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+  register: check_helm
+  changed_when:
+    - "not 'is already latest' in check_helm.stdout"
+
+- name: make sure bash-completion is installed
+  package: 
+    name: bash-completion
+    state: latest
+
+- name: install kubectl autocomplete
+  lineinfile: 
+    line: "source <(kubectl completion bash)"
+    regexp: ^source <(kubectl completion bash)
+    path: ~/.bashrc
+  register: check_bash_complete
+
+- name: apply profile
+  shell: source ~/.bashrc
+  when: check_bash_complete.changed | bool

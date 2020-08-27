@@ -1,0 +1,14 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: spark-pi-ui-svc
+  namespace: default
+spec:
+  rules:
+  - host: traefiktest.lan
+    http:
+      paths:
+      - path: /spark
+        backend:
+          serviceName: spark-pi-ui-svc
+          servicePort: 4040

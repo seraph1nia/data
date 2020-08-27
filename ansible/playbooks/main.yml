@@ -45,7 +45,7 @@
                 --zones=$(terraform output subnet0az),$(terraform output subnet1az),$(terraform output subnet2az) \
                 --node-count=3 \
                 --master-size=t2.medium \
-                --node-size=t2.micro \
+                --node-size=t2.medium \
                 --dns private \
                 --name=k8s-clusters.$(terraform output route53_name)
                 kops update cluster --name k8s-clusters.$(terraform output route53_name) --yes
@@ -55,7 +55,7 @@
         - 'not "already exists" in check_kops.stderr'
         - check_kops.rc == 0
 
-    - name: sleep for 300 seconds and continue with play
+    - name: sleep for 30 seconds and continue with play
       wait_for:
         timeout: 30
       when: not delete_cluster | bool
@@ -63,6 +63,7 @@
     - name: check instance public ip, need to do this in terraform, not dynamic!
       shell: aws ec2 describe-instances --filters "Name=tag:Name,Values=master-us-east-2a.masters.k8s-clusters.data.lan" --query "Reservations[].Instances[].PublicIpAddress[]" | tr -d "-" | tr -d " "
       register: pub_ip_master
+      when: not delete_cluster | bool
 
     - name: edit host file
       lineinfile:
@@ -88,3 +89,35 @@
         project_path: '../../terraform/therest'
         state: present
       when:  delete_cluster | bool
+
+    - name: wait for cluster to be ready
+      shell: kubectl get nodes | grep Ready | wc -l
+      register: count_read_nodes
+      until: count_read_nodes.stdout == "4"
+      retries: 30
+      delay: 20
+      when: not delete_cluster | bool
+
+    - name: kubernetes apply traefik and spark
+      command: "kubectl apply -f ../../kubernetes/{{ item }}"
+      when: not delete_cluster | bool
+      
+      loop:
+        - traefik
+        - spark
+
+    - name: helm repo add 
+      command: helm repo add incubator http://storage.googleapis.com/kubernetes-charts-incubator
+      when: not delete_cluster | bool
+
+    - name: helm install spark-operator
+      command: helm install incubator/sparkoperator --namespace spark-operator --set enableWebhook=true --generate-name
+      register: helm_install_spark
+      when: not delete_cluster | bool
+      failed_when: 
+        - "not 'contain a resource that already exists' in helm_install_spark.stderr"
+        - helm_install_spark.rc == "1"
+
+
+
+
